@@ -1,3 +1,9 @@
+"""
+main file to call the explanations methods and run experiments, given a pre-trained
+model and a data loader.
+© copyright Tyler Dawson, Saeed khorram. https://github.com/saeed-khorram/IGOS
+"""
+
 import torchvision.models as models
 from torch.autograd import Variable
 

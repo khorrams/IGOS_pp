@@ -1,3 +1,8 @@
+"""
+Utility functions to use for logging results and explanations.
+© copyright Tyler Dawson, Saeed khorram. https://github.com/saeed-khorram/IGOS
+"""
+
 import torch
 import os
 import cv2

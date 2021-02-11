@@ -19,7 +19,7 @@ $ source env/bin/activate
 ```
 You can update the pip and install the dependencies using:
 ```
-(env) $ pip --upgrade instapp pip
+(env) $ pip --upgrade install pip
 (env) $ pip install -r req.txt
 ```
 
@@ -36,4 +36,27 @@ The hyperparameters of our method can be directly passed as arguments when runni
 --batch_size 10 --L1 10 --L2 20 --ig_iter 20 --iterations 20 --alpha 1000 
 ```
  
+### Citation
+If you use this code for your research, please consider citing our papers:
+
+```
+@inproceedings{qi2020visualizing,
+  title={Visualizing Deep Networks by Optimizing with Integrated Gradients},
+  author={Qi, Zhongang and Khorram, Saeed and Fuxin, Li},
+  booktitle={Proceedings of the AAAI Conference on Artificial Intelligence},
+  volume={34},
+  number={07},
+  pages={11890--11898},
+  year={2020}
+}
+```
+
+```
+@article{khorram2020igos++,
+  title={iGOS++: Integrated Gradient Optimized Saliency by Bilateral Perturbations},
+  author={Khorram, Saeed and Lawson, Tyler and Li, Fuxin},
+  journal={arXiv preprint arXiv:2012.15783},
+  year={2020}
+}
+```
 

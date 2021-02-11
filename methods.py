@@ -1,3 +1,8 @@
+"""
+Different explanation methods from the Integrated-Gradient Optimized Saliency map methods.
+© copyright Tyler Dawson, Saeed khorram. https://github.com/saeed-khorram/IGOS
+"""
+
 from torch.autograd import Variable
 from methods_helper import *
 
