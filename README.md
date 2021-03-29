@@ -2,7 +2,7 @@
 PyTorch implementation for a family of attribution map methods that optimize for an explanation mask using integrated gradient. 
 
 >* Zhongang Qi, Saeed Khorram, Li Fuxin. ["Visualizing Deep Networks by Optimizing with Integrated Gradients"](https://aaai.org/ojs/index.php/AAAI/article/view/6863/6717), AAAI 2020.
->* Saeed Khorram, Tyler Lawson, Li Fuxin. ["iGOS++: Integrated Gradient Optimized Saliency by Bilateral Perturbations"](https://arxiv.org/pdf/2012.15783.pdf).
+>* Saeed Khorram, Tyler Lawson, Li Fuxin. ["iGOS++: Integrated Gradient Optimized Saliency by Bilateral Perturbations"](https://arxiv.org/pdf/2012.15783.pdf), ACM-CHIL 2021.
 
 ### Contributors: 
 This repository is published by [@Lawsonty](https://github.com/Lawsonty/) and [@saeed-khorram](https://github.com/saeed-khorram/). 
