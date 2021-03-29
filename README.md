@@ -1,8 +1,8 @@
 # Integrated-Gradient Optimized Attribution Maps
 PyTorch implementation for a family of attribution map methods that optimize for an explanation mask using integrated gradient. 
 
->* Zhongang Qi, Saeed Khorram, Fuxin Li. ["Visualizing Deep Networks by Optimizing with Integrated Gradients"](https://aaai.org/ojs/index.php/AAAI/article/view/6863/6717), AAAI 2020.
->* Saeed Khorram, Tyler Dawson, Fuxin Li. ["iGOS++: Integrated Gradient Optimized Saliency by Bilateral Perturbations"](https://arxiv.org/pdf/2012.15783.pdf).
+>* Zhongang Qi, Saeed Khorram, Li Fuxin. ["Visualizing Deep Networks by Optimizing with Integrated Gradients"](https://aaai.org/ojs/index.php/AAAI/article/view/6863/6717), AAAI 2020.
+>* Saeed Khorram, Tyler Lawson, Li Fuxin. ["iGOS++: Integrated Gradient Optimized Saliency by Bilateral Perturbations"](https://arxiv.org/pdf/2012.15783.pdf).
 
 ### Contributors: 
 This repository is published by @Lawsonty and @saeed-khorram. 
@@ -52,7 +52,7 @@ If you use this code for your research, please consider citing our papers:
 ```
 
 ```
-@inproceedings{10.1145/3450439.3451865,
+@inproceedings{khorram2021igos++,
 author = {Khorram, Saeed and Lawson, Tyler and Fuxin, Li},
 title = {IGOS++: Integrated Gradient Optimized Saliency by Bilateral Perturbations},
 year = {2021},
@@ -63,7 +63,6 @@ url = {https://doi.org/10.1145/3450439.3451865},
 doi = {10.1145/3450439.3451865},
 booktitle = {Proceedings of the Conference on Health, Inference, and Learning},
 pages = {174–182},
-numpages = {9},
 keywords = {COVID-19, chest X-ray, saliency methods, medical imaging, integrated-gradient, explainable AI},
 series = {CHIL '21}
 }
