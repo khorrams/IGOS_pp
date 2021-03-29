@@ -52,11 +52,20 @@ If you use this code for your research, please consider citing our papers:
 ```
 
 ```
-@article{khorram2020igos++,
-  title={iGOS++: Integrated Gradient Optimized Saliency by Bilateral Perturbations},
-  author={Khorram, Saeed and Lawson, Tyler and Li, Fuxin},
-  journal={arXiv preprint arXiv:2012.15783},
-  year={2020}
+@inproceedings{10.1145/3450439.3451865,
+author = {Khorram, Saeed and Lawson, Tyler and Fuxin, Li},
+title = {IGOS++: Integrated Gradient Optimized Saliency by Bilateral Perturbations},
+year = {2021},
+isbn = {9781450383592},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3450439.3451865},
+doi = {10.1145/3450439.3451865},
+booktitle = {Proceedings of the Conference on Health, Inference, and Learning},
+pages = {174–182},
+numpages = {9},
+keywords = {COVID-19, chest X-ray, saliency methods, medical imaging, integrated-gradient, explainable AI},
+series = {CHIL '21}
 }
 ```
 
