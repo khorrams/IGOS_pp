@@ -5,7 +5,7 @@ PyTorch implementation for a family of attribution map methods that optimize for
 >* Saeed Khorram, Tyler Lawson, Li Fuxin. ["iGOS++: Integrated Gradient Optimized Saliency by Bilateral Perturbations"](https://arxiv.org/pdf/2012.15783.pdf).
 
 ### Contributors: 
-This repository is published by @Lawsonty and @saeed-khorram. 
+This repository is published by [@Lawsonty](https://github.com/Lawsonty/) and [@saeed-khorram](https://github.com/saeed-khorram/). 
 
 
 ### Dependencies
