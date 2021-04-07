@@ -1,5 +1,5 @@
 # Integrated-Gradient Optimized Saliency Maps (iGOS++/I-GOS)
-PyTorch implementation for a family of attribution map methods that optimize for an explanation mask using integrated gradient. 
+PyTorch implementation for a family of salieny (attribution) map methods that optimize for an explanation mask using integrated gradient. 
 
 >* Saeed Khorram, Tyler Lawson, Li Fuxin. ["iGOS++: Integrated Gradient Optimized Saliency by Bilateral Perturbations"](https://arxiv.org/pdf/2012.15783.pdf), ACM-CHIL 2021.
 
