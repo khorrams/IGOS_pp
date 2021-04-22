@@ -1,6 +1,6 @@
 """
 Helper function for the IGOS explanation methods.
-© copyright Tyler Dawson, Saeed khorram. https://github.com/saeed-khorram/IGOS
+© copyright Tyler Lawson, Saeed khorram. https://github.com/saeed-khorram/IGOS
 """
 
 import torch

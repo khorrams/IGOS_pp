@@ -1,6 +1,6 @@
 """
 Utility functions to use for logging results and explanations.
-© copyright Tyler Dawson, Saeed khorram. https://github.com/saeed-khorram/IGOS
+© copyright Tyler Lawson, Saeed khorram. https://github.com/saeed-khorram/IGOS
 """
 
 import torch
@@ -67,7 +67,7 @@ def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
 
-def get_imagenet_classes(labels_url='https://s3.amazonaws.com/outcome-blog/imagenet/labels.json'):
+def get_imagenet_classes(labels_url='https://s3.amazonaws.com/deep-learning-models/image-models/imagenet_class_index.json'):
     """
         downloads the label file for imagenet
 
@@ -75,7 +75,7 @@ def get_imagenet_classes(labels_url='https://s3.amazonaws.com/outcome-blog/image
     :return:
     """
     labels = requests.get(labels_url)
-    return {int(key): value for key, value in labels.json().items()}
+    return {int(key): value[1] for key, value in labels.json().items()}
 
 
 class ImageSet(torch.utils.data.Dataset):
@@ -100,7 +100,7 @@ class ImageSet(torch.utils.data.Dataset):
         eprint(f"\nLoading filenames from '{root_dir}' directory...")
         (_, _, self.filenames) = next(os.walk(root_dir))
         self.filenames = sorted(self.filenames)
-        eprint("Filenames loaded.\n")
+        eprint(f"{len(self.filenames)} file(s) loaded.\n")
 
     def __getitem__(self, idx):
         if torch.is_tensor(idx):
