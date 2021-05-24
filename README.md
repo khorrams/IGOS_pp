@@ -6,7 +6,7 @@ PyTorch implementation for a family of salieny (attribution) map methods that op
 >* Zhongang Qi, Saeed Khorram, Li Fuxin. ["Visualizing Deep Networks by Optimizing with Integrated Gradients"](https://aaai.org/ojs/index.php/AAAI/article/view/6863/6717), AAAI 2020.
 
 ### Contributors: 
-This repository is published by [@Lawsonty](https://github.com/Lawsonty/) and [@khorrams](https://github.com/saeed-khorram/). 
+This repository is published by [@Lawsonty](https://github.com/Lawsonty/) and [@khorrams](https://github.com/khorrams/). 
 
 
 ### Dependencies
