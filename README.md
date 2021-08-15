@@ -20,7 +20,7 @@ $ source env/bin/activate
 ```
 You can update the pip and install the dependencies using:
 ```
-(env) $ pip --upgrade install pip
+(env) $ pip install --upgrade pip
 (env) $ pip install -r req.txt
 ```
 
