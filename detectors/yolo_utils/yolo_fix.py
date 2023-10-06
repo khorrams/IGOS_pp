@@ -1,10 +1,8 @@
 import torch
 from .models import Darknet
-from .utils import non_max_suppression
 
 import torch
 import torch.nn as nn
-
 
 class YOLOv3_fix(nn.Module):
     def __init__(self,
@@ -29,6 +27,5 @@ class YOLOv3_fix(nn.Module):
     # ---------------------- Main Process for Training ----------------------
     def forward(self, x):
         output=self.model(x)[0]
-        # output_ig=output[:,self.feature_index:self.feature_index+1, self.labels+5:self.labels+6].clone() 
         output_score=output[:,self.feature_index:self.feature_index+1, self.labels+5:self.labels+6].clone() * output[:,self.feature_index:self.feature_index+1, 4:5].clone()
         return output_score

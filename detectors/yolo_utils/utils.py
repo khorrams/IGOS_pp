@@ -236,7 +236,6 @@ def compute_loss(p, targets, model):  # predictions, targets, model
 
         nb = b.shape[0]  # number of positive samples
         if nb:
-            # 对应匹配到正样本的预测信息
             ps = pi[b, a, gj, gi]  # prediction subset corresponding to targets
 
             # GIoU
@@ -261,7 +260,6 @@ def compute_loss(p, targets, model):  # predictions, targets, model
 
         lobj += BCEobj(pi[..., 4], tobj)  # obj loss
 
-    # 乘上每种损失的对应权重
     lbox *= h['giou']
     lobj *= h['obj']
     lcls *= h['cls']
@@ -280,8 +278,6 @@ def build_targets(p, targets, model):
 
     multi_gpu = type(model) in (nn.parallel.DataParallel, nn.parallel.DistributedDataParallel)
     for i, j in enumerate(model.yolo_layers):  # j: [89, 101, 113]
-        # 获取该yolo predictor对应的anchors
-        # 注意anchor_vec是anchors缩放到对应特征层上的尺度
         anchors = model.module.module_list[j].anchor_vec if multi_gpu else model.module_list[j].anchor_vec
         # p[i].shape: [batch_size, 3, grid_h, grid_w, num_params]
         gain[2:] = torch.tensor(p[i].shape)[[3, 2, 3, 2]]  # xyxy gain
@@ -291,31 +287,27 @@ def build_targets(p, targets, model):
 
         # Match targets to anchors
         a, t, offsets = [], targets * gain, 0
-        if nt:  # 如果存在target的话
-            # 通过计算anchor模板与所有target的wh_iou来匹配正样本
+        if nt: 
             # j: [3, nt] , iou_t = 0.20
             j = wh_iou(anchors, t[:, 4:6]) > model.hyp['iou_t']  # iou(3,n) = wh_iou(anchors(3,2), gwh(n,2))
             # t.repeat(na, 1, 1): [nt, 6] -> [3, nt, 6]
-            # 获取正样本对应的anchor模板与target信息
             a, t = at[j], t.repeat(na, 1, 1)[j]  # filter
 
         # Define
-        # long等于to(torch.int64), 数值向下取整
         b, c = t[:, :2].long().T  # image_idx, class
         gxy = t[:, 2:4]  # grid xy
         gwh = t[:, 4:6]  # grid wh
-        gij = (gxy - offsets).long()  # 匹配targets所在的grid cell左上角坐标
+        gij = (gxy - offsets).long()  
         gi, gj = gij.T  # grid xy indices
 
         # Append
         # gain[3]: grid_h, gain[2]: grid_w
         # image_idx, anchor_idx, grid indices(y, x)
         indices.append((b, a, gj.clamp_(0, gain[3]-1), gi.clamp_(0, gain[2]-1)))
-        tbox.append(torch.cat((gxy - gij, gwh), 1))  # gt box相对anchor的x,y偏移量以及w,h
+        tbox.append(torch.cat((gxy - gij, gwh), 1))  
         anch.append(anchors[a])  # anchors
         tcls.append(c)  # class
         if c.shape[0]:  # if any targets
-            # 目标的标签数值不能大于给定的目标类别数
             assert c.max() < model.nc, 'Model accepts %g classes labeled from 0-%g, however you labelled a class %g. ' \
                                        'See https://github.com/ultralytics/yolov3/wiki/Train-Custom-Data' % (
                                            model.nc, model.nc - 1, c.max())
@@ -344,14 +336,14 @@ def non_max_suppression(prediction, conf_thres=0.1, iou_thres=0.6,
     output = [None] * prediction.shape[0]
     output_index = [None] * prediction.shape[0]
 
-    for xi, x in enumerate(prediction):  # image index, image inference 遍历每张图片
+    for xi, x in enumerate(prediction):  # image index, image inference 
         # Apply constraints
         index_help=torch.Tensor(np.arange(prediction.shape[1])).cuda()
         index_help=index_help[x[:, 4] > conf_thres]
-        x = x[x[:, 4] > conf_thres]  # confidence 根据obj confidence虑除背景目标
+        x = x[x[:, 4] > conf_thres]  # confidence 
 
         index_help=index_help[((x[:, 2:4] > min_wh) & (x[:, 2:4] < max_wh)).all(1)]
-        x = x[((x[:, 2:4] > min_wh) & (x[:, 2:4] < max_wh)).all(1)]  # width-height 虑除小目标
+        x = x[((x[:, 2:4] > min_wh) & (x[:, 2:4] < max_wh)).all(1)]  # width-height 
 
         # If none remain process next image
         if not x.shape[0]:
@@ -366,11 +358,11 @@ def non_max_suppression(prediction, conf_thres=0.1, iou_thres=0.6,
         box = xywh2xyxy(x[:, :4])
 
         # Detections matrix nx6 (xyxy, conf, cls)
-        if multi_label:  # 针对每个类别执行非极大值抑制
+        if multi_label:  
             i, j = (x[:, 5:] > conf_thres).nonzero(as_tuple=False).t()
             index_help=index_help[i]
             x = torch.cat((box[i], x[i, j + 5].unsqueeze(1), j.float().unsqueeze(1)), 1)
-        else:  # best class only  直接针对每个类别中概率最大的类别进行非极大值抑制处理
+        else:  # best class only  
             conf, j = x[:, 5:].max(1)
             x = torch.cat((box, conf.unsqueeze(1), j.float().unsqueeze(1)), 1)[conf > conf_thres]
 
@@ -394,7 +386,7 @@ def non_max_suppression(prediction, conf_thres=0.1, iou_thres=0.6,
         c = x[:, 5] * 0 if agnostic else x[:, 5]  # classes
         boxes, scores = x[:, :4].clone() + c.view(-1, 1) * max_wh, x[:, 4]  # boxes (offset by class), scores
         i = torchvision.ops.nms(boxes, scores, iou_thres)
-        i = i[:max_num]  # 最多只保留前max_num个目标信息
+        i = i[:max_num] 
         if merge and (1 < n < 3E3):  # Merge NMS (boxes merged using weighted mean)
             try:  # update boxes as boxes(i,4) = weights(i,n) * boxes(n,4)
                 iou = box_iou(boxes[i], boxes) > iou_thres  # iou matrix

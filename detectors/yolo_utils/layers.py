@@ -25,9 +25,7 @@ class Concat(nn.Module):
 
 
 class FeatureConcat(nn.Module):
-    """
-    将多个特征矩阵在channel维度进行concatenate拼接
-    """
+
     def __init__(self, layers):
         super(FeatureConcat, self).__init__()
         self.layers = layers  # layer indices
@@ -38,14 +36,12 @@ class FeatureConcat(nn.Module):
 
 
 class WeightedFeatureFusion(nn.Module):  # weighted sum of 2 or more layers https://arxiv.org/abs/1911.09070
-    """
-    将多个特征矩阵的值进行融合(add操作)
-    """
+
     def __init__(self, layers, weight=False):
         super(WeightedFeatureFusion, self).__init__()
         self.layers = layers  # layer indices
         self.weight = weight  # apply weights boolean
-        self.n = len(layers) + 1  # number of layers 融合的特征矩阵个数
+        self.n = len(layers) + 1  # number of layers
         if weight:
             self.w = nn.Parameter(torch.zeros(self.n), requires_grad=True)  # layer weights
 
@@ -62,10 +58,9 @@ class WeightedFeatureFusion(nn.Module):  # weighted sum of 2 or more layers http
             na = a.shape[1]  # feature channels
 
             # Adjust channels
-            # 根据相加的两个特征矩阵的channel选择相加方式
-            if nx == na:  # same shape 如果channel相同，直接相加
+            if nx == na:  # same shape 
                 x = x + a
-            elif nx > na:  # slice input 如果channel不同，将channel多的特征矩阵砍掉部分channel保证相加的channel一致
+            elif nx > na:  # slice input 
                 x[:, :na] = x[:, :na] + a  # or a = nn.ZeroPad2d((0, 0, 0, 0, 0, dc))(a); x = x + a
             else:  # slice feature
                 x = x + a[:, :nx]
