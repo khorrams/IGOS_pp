@@ -26,6 +26,16 @@ You can update the pip and install the dependencies using:
 (env) $ pip install -r req.txt
 ```
 
+### Detector Preparation
+
+Download the Mask R-CNN, Faster R-CNN and YOLOv3-SPP, then put them in the `weight/`:
+```
+weight/
+  maskrcnn_resnet50_fpn_coco-bf2d0c1e.pth
+  fasterrcnn_resnet50_fpn_coco-258fb6c6.pth
+  yolov3-spp-ultralytics-512.pt
+```
+
 ### Quick Start
 To generate explanations, you can simply run:
 ```
