@@ -16,12 +16,32 @@ import seaborn as sns
 import numpy as np
 
 from PIL import Image
-
+from methods_helper import *
+from detectors.yolo_utils.utils import non_max_suppression
 
 # mean and standard deviation for the imagenet dataset
 mean = torch.tensor([0.485, 0.456, 0.406])
 std = torch.tensor([0.229, 0.224, 0.225])
 
+# class names for the CoCo dataset
+coco_names = ['__background__', 'person', 'bicycle', 'car', 'motorcycle', 'airplane', \
+              'bus', 'train', 'truck', 'boat', 'traffic light', 'fire hydrant', 'N/A', 
+              'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 
+              'cow', 'elephant', 'bear', 'zebra', 'giraffe', 'N/A', 'backpack', 'umbrella',
+              'N/A', 'N/A', 'handbag', 'tie', 'suitcase', 'frisbee', 'skis', 'snowboard',
+              'sports ball', 'kite', 'baseball bat', 'baseball glove', 'skateboard',
+              'surfboard', 'tennis racket', 'bottle', 'N/A', 'wine glass', 'cup', 'fork',
+              'knife', 'spoon', 'bowl', 'banana', 'apple', 'sandwich', 'orange',
+              'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'chair', 'couch',
+              'potted plant', 'bed', 'N/A', 'dining table', 'N/A', 'N/A', 'toilet',
+              'N/A', 'tv', 'laptop', 'mouse', 'remote', 'keyboard', 'cell phone', 'microwave',
+              'oven', 'toaster', 'sink', 'refrigerator', 'N/A', 'book', 'clock', 'vase',
+              'scissors', 'teddy bear', 'hair drier', 'toothbrush']
+
+coco_yolo_index = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20,
+                    21, 22, 23, 24, 25, 27, 28, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44,
+                    46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 67,
+                    70, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 84, 85, 86, 87, 88, 89, 90]
 
 def init_sns():
     """
@@ -44,7 +64,7 @@ def init_logger(args):
     :return:
     """
     # make output directoty
-    out_dir = os.path.join('Output', f"{args.method}_{time.strftime('%m_%d_%Y-%H:%M:%S')}")
+    out_dir = os.path.join('Output', f"{args.opt}-{args.method}_{time.strftime('%m_%d_%Y-%H:%M:%S')}")
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
     eprint(f'Output Directory: {out_dir}\n')
@@ -67,31 +87,48 @@ def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
 
-def get_imagenet_classes(labels_url='https://s3.amazonaws.com/deep-learning-models/image-models/imagenet_class_index.json'):
+def get_imagenet_classes(dataset, model_name):
     """
-        downloads the label file for imagenet
+        get the calsses name for the dataset
 
-    :param labels_url:
+    :param dataset:
     :return:
     """
-    labels = requests.get(labels_url)
-    return {int(key): value[1] for key, value in labels.json().items()}
+    if dataset == 'imagenet':
+        labels_url='https://s3.amazonaws.com/deep-learning-models/image-models/imagenet_class_index.json'
+        labels = requests.get(labels_url)
+        return {int(key): value[1] for key, value in labels.json().items()}
+    
+    if dataset == 'coco':
+        if model_name == 'yolov3spp':
+            return [coco_names[i] for i in coco_yolo_index]
+        else:
+            return coco_names
 
 
 class ImageSet(torch.utils.data.Dataset):
-    def __init__(self, root_dir, transform=None, blur=False):
+    def __init__(self, root_dir, image_size=224, transform=None, blur=False):
         """
             Loads data given a path (root_dir) and preprocess them (transforms, blur)
 
         :param root_dir:
+        :param image_size:
         :param transform:
         :param blur:
         """
         self.root_dir = root_dir
         self.transform = transform
         self.blur = blur
+        self.image_size = image_size
+        if image_size >= 800:
+            self.ksize = 201
+        elif image_size >=500:
+            self.ksize = 151
+        else:
+            self.ksize = 51
+        self.sigma = self.ksize - 1
         self.transform = transforms.Compose(
-                [transforms.Resize((224, 224)),
+                [transforms.Resize((image_size, image_size)),
                  transforms.ToTensor(),
                  transforms.Normalize(mean,std)
                  ]
@@ -110,8 +147,8 @@ class ImageSet(torch.utils.data.Dataset):
         image = Image.open(img_name).convert('RGB')
 
         if self.blur:
-            resized_image = image.resize((224, 224))
-            blurred = cv2.GaussianBlur(np.asarray(resized_image), (51, 51), sigmaX=50)
+            resized_image = image.resize((self.image_size, self.image_size))
+            blurred = cv2.GaussianBlur(np.asarray(resized_image), (self.ksize, self.ksize), sigmaX=self.sigma)
             blurred = Image.fromarray(blurred.astype(np.uint8))
 
         if self.transform:
@@ -130,7 +167,7 @@ class ImageSet(torch.utils.data.Dataset):
         return len(self.filenames)
 
 
-def save_heatmaps(masks, images, size, index, outdir, out=224):
+def save_heatmaps(masks, images, size, index, index_o, outdir, model_name, box, classes, labels, out=224):
     """
         Save masks and corresponding overlay
 
@@ -138,7 +175,12 @@ def save_heatmaps(masks, images, size, index, outdir, out=224):
     :param images:
     :param size:
     :param index:
+    :param index_o:
     :param outdir:
+    :param model_name:
+    :param box:
+    :param classes:
+    :param labels:
     :param out:
     :return:
     """
@@ -164,9 +206,27 @@ def save_heatmaps(masks, images, size, index, outdir, out=224):
         # overlay the mask over the image
         overlay = (u_mask ** 0.8) * image + (1 - u_mask ** 0.8) * heatmap
 
-        plt.imsave(os.path.join(outdir, f'{index+i+1}_heatmap.jpg'), heatmap)
-        plt.imsave(os.path.join(outdir, f'{index+i+1}_overlay.jpg'), overlay)
+        plt.imsave(os.path.join(outdir, f'{index+i}_{index_o}_heatmap.jpg'), heatmap)
+        plt.imsave(os.path.join(outdir, f'{index+i}_{index_o}_overlay.jpg'), overlay)
 
+        if model_name not in ['vgg19', 'resnet50']:
+            overlay = np.array(Image.open(os.path.join(outdir, f'{index+i}_{index_o}_overlay.jpg')))
+            cv2.rectangle(
+                    overlay,
+                    (int(box[0]), int(box[1])),
+                    (int(box[2]), int(box[3])),
+                    np.array((0.0,255.0,255.0)), 
+                    thickness = 2,
+                    )
+            cv2.putText(overlay, 
+                        classes[labels], 
+                        (int(box[0]), int(box[1] - 5)),
+                        cv2.FONT_HERSHEY_SIMPLEX, 
+                        fontScale = 0.8, 
+                        color = np.array((255.0,255.0,255.0)), 
+                        thickness = 2,
+                        )
+            plt.imsave(os.path.join(outdir, f'{index+i}_{index_o}_overlay_box.jpg'), overlay)
 
 def save_masks(masks, index, categories, mask_name, outdir):
     """
@@ -184,7 +244,7 @@ def save_masks(masks, index, categories, mask_name, outdir):
         np.save(os.path.join(outdir, f'{mask_name}_{i+1}_mask_{category}.npy'), mask)
 
 
-def save_curves(del_curve, ins_curve, index_curve, index, outdir):
+def save_curves(del_curve, ins_curve, index_curve, index, index_o, outdir):
     """
         Save the deletion/insertion curves for the generated masks.
 
@@ -192,6 +252,7 @@ def save_curves(del_curve, ins_curve, index_curve, index, outdir):
     :param ins_curve:
     :param index_curve:
     :param index:
+    :param index_o:
     :param outdir:
     :return:
     """
@@ -214,16 +275,17 @@ def save_curves(del_curve, ins_curve, index_curve, index, outdir):
         ax1.text(0.5, 0.5, 'AUC: {:.4f}'.format(auc(ins_curve[i])), fontsize=14, horizontalalignment='center', verticalalignment='center')
 
         # save the plot
-        plt.savefig(os.path.join(outdir, f'{index+i+1}_curves.jpg'), bbox_inches='tight', pad_inches = 0)
+        plt.savefig(os.path.join(outdir, f'{index}_{index_o}_curves.jpg'), bbox_inches='tight', pad_inches = 0)
         plt.close()
 
 
-def save_images(images, index, outdir, classes, labels):
+def save_images(images, index, index_o, outdir, classes, labels):
     """
         saves original images into output directory
 
     :param images:
     :param index:
+    :param index_o:
     :param outdir:
     :param classes:
     :param labels:
@@ -231,7 +293,7 @@ def save_images(images, index, outdir, classes, labels):
     """
     images_ = images.cpu().detach().permute((0, 2, 3, 1)) * std + mean
     for i, image in enumerate(images_):
-        plt.imsave(os.path.join(outdir, f'{index+i+1}_image_{classes[labels[i].item()]}.jpg'), image.numpy())
+        plt.imsave(os.path.join(outdir, f'{index+i}_{index_o}_image_{classes[labels]}.jpg'), image.numpy())
 
 
 def load_image(path):
@@ -256,3 +318,95 @@ def auc(array):
     return (sum(array) - array[0]/2 - array[-1]/2)/len(array)
 
 
+def get_predict(image, model, args, threshold=0.5):
+    """
+        filter the detection results by the threshold (predicted score)
+
+    :param image:
+    :param model:
+    :param args:
+    :param threshold:
+    :return:
+    """
+    pred_data=dict()
+    pred_data['no_res'] = True
+
+    if args.model == 'm-rcnn':
+        outputs = model(image)
+        pred_labels = outputs[0]['labels']
+        pred_scores = outputs[0]['scores'].detach().cpu().numpy()
+        pred_bboxes = outputs[0]['boxes'].detach().cpu().numpy()
+        pred_maskes = outputs[0]['masks'].detach().cpu()
+        
+        ind_threshold = np.where(pred_scores >= threshold)[0]
+        pred_data['boxes'] = pred_bboxes[ind_threshold, :]
+        pred_data['labels'] = pred_labels[ind_threshold]
+        pred_data['masks'] = torch.where(pred_maskes[ind_threshold] > 0.5, 1.0, 0.0)
+        pred_data['no_res'] = False
+
+    elif args.model == 'f-rcnn':
+        outputs = model(image)
+        pred_labels = outputs[0]['labels']
+        pred_scores = outputs[0]['scores'].detach().cpu().numpy()
+        pred_bboxes = outputs[0]['boxes'].detach().cpu().numpy()
+        
+        ind_threshold = np.where(pred_scores >= threshold)[0]
+        pred_data['boxes'] = pred_bboxes[ind_threshold, :]
+        pred_data['labels'] = pred_labels[ind_threshold]
+        pred_data['no_res'] = False
+    
+    elif args.model == 'yolov3spp':
+        out = model(image)[0]
+        output, index = non_max_suppression(out, conf_thres=threshold, iou_thres=0.5, multi_label=True)
+        
+        if output[0] != None:
+            pred_data['boxes'] = output[0][:,:4].detach().cpu().numpy()
+            pred_data['labels'] = output[0][:,5].detach().cpu().int()
+            pred_data['feature_index'] = index[0]
+            pred_data['no_res'] = False
+
+    else:
+        _, labels = torch.max(model(image), 1)
+        pred_data['labels'] = labels.detach()
+        pred_data['boxes'] = np.array([[0, 0, image.shape[-2], image.shape[-1]]])
+        pred_data['no_res'] = False
+
+    return pred_data
+
+
+def get_initial(pred_data, k, init_posi, init_val, input_size, out_size):
+    """
+        filter the detection results by the threshold (predicted score)
+
+    :param pred_data:
+    :param k:
+    :param initial_posi:
+    :param init_val:
+    :param input_size:
+    :param out_size:
+    :return:
+    """
+    interval_r = (pred_data['boxes'][:,2] - pred_data['boxes'][:,0]) / k
+    interval_c = (pred_data['boxes'][:,3] - pred_data['boxes'][:,1]) / k
+    num_row = init_posi // k
+    num_col = init_posi - num_row * k
+    init_boxes = np.concatenate([
+                            [pred_data['boxes'][:,0] + interval_r * num_row], # x1
+                            [pred_data['boxes'][:,1] + interval_c * num_col], # y1
+                            [pred_data['boxes'][:,0] + interval_r * (num_row + 1)], # x2
+                            [pred_data['boxes'][:,1] + interval_c * (num_col + 1)], # y2
+                            ], axis=0).T 
+
+    pred_data['init_masks'] = []
+    down = torch.nn.UpsamplingBilinear2d(size=(out_size, out_size))
+
+    for ith, box in enumerate(init_boxes):
+        init_mask = torch.zeros((input_size, input_size)).unsqueeze(0)
+        init_mask[int(box[0]) : int(box[2]), int(box[1]) : int(box[3])] = 1
+
+        if 'masks' in pred_data.keys():
+            init_mask = init_mask * pred_data['masks'][ith]
+        
+        init_mask = down(init_mask.unsqueeze(0)) * init_val
+        pred_data['init_masks'].append(1 - init_mask)
+    return pred_data

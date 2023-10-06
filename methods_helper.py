@@ -65,15 +65,15 @@ def upscale(masks):
     return upscale.up(masks).expand((-1,1,upscale.out_size,upscale.out_size))  # TODO
 
 
-def interval_score(model, images, baselines, labels, up_masks, num_iter, output_func, noise=True):
+def interval_score(model, model_name, image, baseline, label, up_masks, num_iter, output_func, noise=True):
     """
-        Computes the score of masked images in a straight line
-        path from baselines to masked images, with num_iter intervals.
+        Computes the score of masked image in a straight line
+        path from baseline to masked image, with num_iter intervals.
 
     :param model:
-    :param images:
-    :param baselines:
-    :param labels:
+    :param image:
+    :param baseline:
+    :param label:
     :param up_masks:
     :param num_iter:
     :param noise:
@@ -83,39 +83,49 @@ def interval_score(model, images, baselines, labels, up_masks, num_iter, output_
     # The intervals to approximate the integral over
     intervals = torch.linspace(1/num_iter, 1, num_iter, requires_grad=False).cuda().view(-1, 1, 1, 1)
     interval_masks = up_masks.unsqueeze(1) * intervals
-    local_images = phi(images.unsqueeze(1), baselines.unsqueeze(1), interval_masks)
+    local_images = phi(image.unsqueeze(1), baseline.unsqueeze(1), interval_masks)
 
     if noise:
         local_images = local_images + torch.randn_like(local_images) * .2
 
     # Shape of image tensor when viewed in batch form
-    new_shape = torch.tensor(images.shape) * torch.tensor(intervals.shape)
-    losses = output_func(local_images.view(*new_shape), model).view(images.shape[0], num_iter, -1)
-    losses = torch.gather(losses, 2, labels.view(-1, 1).expand(-1, num_iter).view(-1, num_iter, 1))
+    new_shape = torch.tensor(image.shape) * torch.tensor(intervals.shape)
+
+    if model_name in ['m-rcnn', 'f-rcnn']: 
+        losses = torch.cat([out['scores'] for out in model(local_images.view(*new_shape))]).view(-1, num_iter, 1)
+
+    elif model_name == 'yolov3spp':
+        losses = model(local_images.view(*new_shape)).view(-1, num_iter, 1)
+
+    else:
+        losses = output_func(local_images.view(*new_shape), model).view(image.shape[0], num_iter, -1)
+        losses = torch.gather(losses, 2, label.view(-1, 1).expand(-1, num_iter).view(-1, num_iter, 1))
+
     return losses / num_iter
 
 
-def integrated_gradient(model, images, baselines, labels, up_masks, num_iter, output_func=None, noise=True):
+def integrated_gradient(model, model_name, image, baseline, label, up_masks, num_iter, output_func=None, noise=True):
     """
         Calculates and backprops the integrated gradient.
         Does not have the original mask, so does not return the gradient
 
     :param model:
-    :param images:
-    :param baselines:
-    :param labels:
+    :param image:
+    :param baseline:
+    :param label:
     :param up_masks:
     :param num_iter:
     :param noise:
     :param output_func:
     :return:
     """
-    for i in range(images.shape[0]):
+    for i in range(image.shape[0]):
         loss = interval_score(
                 model,
-                images[i].unsqueeze(0),
-                baselines[i].unsqueeze(0),
-                labels[i].unsqueeze(0),
+                model_name, 
+                image[i].unsqueeze(0),
+                baseline[i].unsqueeze(0),
+                label[i].unsqueeze(0),
                 up_masks[i].unsqueeze(0),
                 num_iter,
                 output_func,
@@ -211,7 +221,7 @@ def logit_output(inputs, model):
     return model(inputs)
 
 
-def metric(image, baseline, mask, model, labels, step=5, size=28,):
+def metric(image, baseline, mask, model, model_name, label, label_i, pred_data, size=28,):
     """
         Calculates the deletion/insertion scores/curves given the image and generated masks.
 
@@ -219,30 +229,45 @@ def metric(image, baseline, mask, model, labels, step=5, size=28,):
     :param baseline:
     :param mask:
     :param model:
-    :param labels:
+    :param label:
     :param step:
     :param size:
     :return:
     """
     with torch.no_grad():
         # The dimensions for the image
-        out_size = image.shape[-1]
+        img_size = image.shape[-1]
         # Compute the total number of pixels in a mask
-        num_pixels = torch.prod(torch.tensor(mask.shape[1:])).item()
+        mask_pixels = torch.prod(torch.tensor(mask.shape[1:])).item()
+        if model_name == 'm-rcnn':
+            num_pixels = max(1, int(pred_data['masks'][label_i].sum() * ((size / img_size) ** 2))) * 3
+            if num_pixels > mask_pixels:
+                num_pixels = mask_pixels
+        elif model_name in ['f-rcnn', 'yolov3spp']:
+            x1 = pred_data['boxes'][label_i][0] * (size / img_size)
+            y1 = pred_data['boxes'][label_i][1] * (size / img_size)
+            x2 = pred_data['boxes'][label_i][2] * (size / img_size)
+            y2 = pred_data['boxes'][label_i][3] * (size / img_size)
+            num_pixels = max(1, int((x2 - x1) * (y2 - y1))) * 3
+            if num_pixels > mask_pixels:
+                num_pixels = mask_pixels
+        else:
+            num_pixels = torch.prod(torch.tensor(mask.shape[1:])).item()
+        # Compute the step size
+        step=max(1, num_pixels // 50)
         # Used for indexing with batch sizes
         l = torch.arange(image.shape[0])
         # The unmasked score
-        og_scores = torch.nn.Softmax(dim=1)(model(image))[l,labels]
+        og_scores = score_output(image, model, model_name, l, label)
         # The baseline score
-        blur_scores = torch.nn.Softmax(dim=1)(model(baseline))[l,labels]
+        blur_scores = score_output(baseline, model, model_name, l, label)
         # Initial values for the curves
         del_curve = [og_scores]
         ins_curve = [blur_scores]
         index = [0.]
 
-        up = torch.nn.UpsamplingBilinear2d(size=(out_size,out_size)).cuda()
         # True_mask is used to hold 1 or 0. Either show that pixel or blur it.
-        true_mask = torch.ones((mask.shape[0], num_pixels)).cuda()
+        true_mask = torch.ones((mask.shape[0], mask_pixels)).cuda()
         del_scores = torch.zeros(mask.shape[0]).cuda()
         ins_scores = torch.zeros(mask.shape[0]).cuda()
         # Sort each mask by values and store the indices.
@@ -255,30 +280,49 @@ def metric(image, baseline, mask, model, labels, step=5, size=28,):
             # Set those indices to 0
             true_mask[l, indices.permute(1,0)] = 0
             up_mask = upscale(true_mask.view(-1, 1, size,size))
-            # Mask the images for deletion
+            # Mask the image for deletion
             del_image = phi(image, baseline, up_mask)
             # Calculate new scores
-            outputs = torch.nn.Softmax(dim=1)(model(del_image))[l,labels]
+            outputs = score_output(del_image, model, model_name, l, label)
             del_curve.append(outputs)
             index.append((pixels+step)/num_pixels)
             del_scores += outputs * step if pixels + step < num_pixels else\
                 num_pixels - pixels
 
-            # Mask the images for insertion
+            # Mask the image for insertion
             ins_image = phi(baseline, image, up_mask)
 
             # Calculate the new scores
-            outputs = torch.nn.Softmax(dim=1)(model(ins_image))[l,labels]
+            outputs = score_output(ins_image, model, model_name, l, label)
 
             ins_curve.append(outputs)
             ins_scores += outputs * step if pixels + step < num_pixels else\
                 num_pixels - pixels
 
         # Force scores between 0 and 1.
-        del_scores /= size*size
-        ins_scores /= size*size
+        del_scores /= num_pixels
+        ins_scores /= num_pixels
 
         del_curve = list(map(lambda x: [y.item() for y in x], zip(*del_curve)))
         ins_curve = list(map(lambda x: [y.item() for y in x], zip(*ins_curve)))
 
     return del_scores, ins_scores, del_curve, ins_curve, index
+
+
+def score_output(image, model, model_name, l, label):
+    """
+        Get score of this image.
+
+    :param image:
+    :param model:
+    :param model_name:
+    :param l:
+    :param label:
+    :return:
+    """
+    if model_name in ['m-rcnn', 'f-rcnn']:
+        return (model(image))[0]['scores']
+    elif model_name == 'yolov3spp':
+        return model(image)[0][0]
+    else:
+        return torch.nn.Softmax(dim=1)(model(image))[l,label]

@@ -11,7 +11,9 @@ from args import init_args
 from utils import *
 from methods_helper import *
 from methods import IGOS, iGOS_p, iGOS_pp
-
+from detectors.m_rcnn import m_rcnn, m_rcnn_fixp
+from detectors.f_rcnn import f_rcnn, f_rcnn_fixp
+from detectors.yolo import yolov3spp, yolov3spp_fix
 
 def gen_explanations(model, dataloader, args):
 
@@ -30,64 +32,90 @@ def gen_explanations(model, dataloader, args):
 
     eprint(f'Size is {args.size}x{args.size}')
 
-    i = 0
+    i_img = 0
+    i_obj = 0
     total_del, total_ins, total_time = 0, 0, 0
 
     for data in dataloader:
-
         # unpack images and turn them into variables
-        images, blurs = data
-        images, blurs = Variable(images).cuda(), Variable(blurs).cuda()
+        image, blur = data
+        image, blur = Variable(image).cuda(), Variable(blur).cuda()
 
-        _, labels = torch.max(model(images), 1)
+        pred_data = get_predict(image, model, args, threshold=0.2)
 
-        now = time.time()
+        if pred_data['no_res'] == True:
+            eprint(f'{args.opt}-{args.method:6} ({i_img}- / {i_obj} samples) skip')
+            i_img += 1
+            continue
+        
+        pred_data = get_initial(pred_data, args.diverse_k, args.init_posi, 
+                                args.init_val, args.input_size, args.size)
 
         # generate masks
-        masks = method(
-            model,
-            images=images.detach(),
-            baselines=blurs.detach(),
-            labels=labels,
-            size=args.size,
-            iterations=args.ig_iter,
-            ig_iter=args.iterations,
-            L1=args.L1,
-            L2=args.L2,
-            alpha=args.alpha,
-        )
+        for l_i, label in enumerate(pred_data['labels']):
 
-        total_time += time.time() - now
+            if args.model == 'm-rcnn':
+                fix_detector = m_rcnn_fixp(pred_data['boxes'][l_i], label)
+            elif args.model == 'f-rcnn':
+                fix_detector = f_rcnn_fixp(pred_data['boxes'][l_i], label)
+            elif args.model == 'yolov3spp':
+                fix_detector = yolov3spp_fix(pred_data['labels'][l_i], int(pred_data['feature_index'][l_i]))
+            else:
+                fix_detector = model
 
-        # Calculate the scores for the masks
-        del_scores, ins_scores, del_curve, ins_curve, index = metric(
-            images,
-            blurs,
-            masks.detach(),
-            model,
-            labels,
-            step=max(1, args.size ** 2 // 50),
-            size=args.size
-        )
+            now = time.time()
 
-        # save heatmaps, images, and del/ins curves
-        save_heatmaps(masks, images, args.size, i, out_dir)
-        save_curves(del_curve, ins_curve, index, i, out_dir)
-        save_images(images, i, out_dir, classes, labels)
+            masks = method(
+                model=fix_detector,
+                model_name=args.model,
+                init_mask=pred_data['init_masks'][l_i],
+                image=image.detach(),
+                baseline=blur.detach(),
+                label=label.unsqueeze(0),
+                size=args.size,
+                iterations=args.ig_iter,
+                ig_iter=args.iterations,
+                L1=args.L1,
+                L2=args.L2,
+                alpha=args.alpha,
+            )
 
-        # log info
-        total_del += del_scores.sum().item()
-        total_ins += ins_scores.sum().item()
-        i += images.shape[0]
+            total_time += time.time() - now
 
-        eprint(
-            f'{args.method:6} ({i} samples)'
-            f' Deletion (Avg.): {total_del / i:.05f}'
-            f' Insertion (Avg.): {total_ins / i:.05f}'
-            f' Time (Avg.): {total_time / i:.03f}'
-        )
+            # Calculate the scores for the masks
+            del_scores, ins_scores, del_curve, ins_curve, index = metric(
+                image,
+                blur,
+                masks.detach(),
+                fix_detector,
+                args.model,
+                label,
+                l_i,
+                pred_data,
+                size=args.size
+            )
 
-        if i >= args.num_samples:
+            # # save heatmaps, images, and del/ins curves
+            save_heatmaps(masks, image, args.size, i_img, l_i, out_dir, 
+                          args.model, pred_data['boxes'][l_i], classes, 
+                          label, out=args.input_size)
+            save_curves(del_curve, ins_curve, index, i_img, l_i, out_dir)
+            save_images(image, i_img, l_i, out_dir, classes, label)
+
+            # log info
+            total_del += del_scores.sum().item()
+            total_ins += ins_scores.sum().item()
+            i_obj += 1
+
+            eprint(
+                f'{args.opt}-{args.method:6} ({i_img}-{l_i} / {i_obj} samples)'
+                f' Deletion (Avg.): {total_del / i_obj:.05f}'
+                f' Insertion (Avg.): {total_ins / i_obj:.05f}'
+                f' Time (Avg.): {total_time / i_obj:.03f}'
+            )
+
+        i_img += 1
+        if i_img >= args.num_samples:
             break
 
     model.train()
@@ -103,13 +131,13 @@ if __name__ == "__main__":
     init(args.input_size)
     init_sns()
 
-    classes = get_imagenet_classes()
+    classes = get_imagenet_classes(args.dataset, args.model)
 
-    dataset = ImageSet(args.data, blur=True)
+    dataset = ImageSet(args.data, image_size=args.input_size, blur=True)
 
     data_loader = torch.utils.data.DataLoader(
         dataset,
-        batch_size=args.batch_size,
+        batch_size=1,
         shuffle=args.shuffle,
         num_workers=4
     )
@@ -121,6 +149,22 @@ if __name__ == "__main__":
 
     elif args.model == 'resnet50':
         model = models.resnet50(pretrained=True, progress=True).cuda()
+
+    elif args.model == 'm-rcnn':
+        model = m_rcnn()
+        url="./weight/maskrcnn_resnet50_fpn_coco-bf2d0c1e.pth"
+        model.load_state_dict(torch.load(url))
+        model=model.cuda()
+
+    elif args.model == 'f-rcnn':
+        model = f_rcnn()
+        url="./weight/fasterrcnn_resnet50_fpn_coco-258fb6c6.pth"
+        model.load_state_dict(torch.load(url))
+        model=model.cuda()
+    
+    elif args.model == 'yolov3spp':
+        model = yolov3spp()
+        model = model.to('cuda')
 
     else:
         raise ValueError("Model not defined.")
