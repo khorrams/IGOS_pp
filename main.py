@@ -47,26 +47,21 @@ def gen_explanations(model, dataloader, args):
             eprint(f'{args.opt}-{args.method:6} ({i_img}- / {i_obj} samples) skip')
             i_img += 1
             continue
-        
+
+        # calculate init area
         pred_data = get_initial(pred_data, args.diverse_k, args.init_posi, 
                                 args.init_val, args.input_size, args.size)
 
         # generate masks
         for l_i, label in enumerate(pred_data['labels']):
 
-            if args.model == 'm-rcnn':
-                fix_detector = m_rcnn_fixp(pred_data['boxes'][l_i], label)
-            elif args.model == 'f-rcnn':
-                fix_detector = f_rcnn_fixp(pred_data['boxes'][l_i], label)
-            elif args.model == 'yolov3spp':
-                fix_detector = yolov3spp_fix(pred_data['labels'][l_i], int(pred_data['feature_index'][l_i]))
-            else:
-                fix_detector = model
+            # fix the proposal or use the same box for detectors
+            fix_model = model_fix(model, args.model, pred_data, l_i, label)
 
             now = time.time()
 
             masks = method(
-                model=fix_detector,
+                model=fix_model,
                 model_name=args.model,
                 init_mask=pred_data['init_masks'][l_i],
                 image=image.detach(),
@@ -87,7 +82,7 @@ def gen_explanations(model, dataloader, args):
                 image,
                 blur,
                 masks.detach(),
-                fix_detector,
+                fix_model,
                 args.model,
                 label,
                 l_i,

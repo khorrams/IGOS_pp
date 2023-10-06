@@ -19,6 +19,10 @@ from PIL import Image
 from methods_helper import *
 from detectors.yolo_utils.utils import non_max_suppression
 
+from detectors.m_rcnn import m_rcnn_fixp
+from detectors.f_rcnn import f_rcnn_fixp
+from detectors.yolo import yolov3spp_fix
+
 # mean and standard deviation for the imagenet dataset
 mean = torch.tensor([0.485, 0.456, 0.406])
 std = torch.tensor([0.229, 0.224, 0.225])
@@ -410,3 +414,23 @@ def get_initial(pred_data, k, init_posi, init_val, input_size, out_size):
         init_mask = down(init_mask.unsqueeze(0)) * init_val
         pred_data['init_masks'].append(1 - init_mask)
     return pred_data
+
+def model_fix(model, model_name, pred_data, l_i, label):
+    """
+        fix the proposal or use the same box for detectors
+
+    :param model:
+    :param model_name:
+    :param pred_data:
+    :param l_i:
+    :param label:
+    :return:
+    """
+    if model_name == 'm-rcnn':
+        return m_rcnn_fixp(pred_data['boxes'][l_i], label)
+    elif model_name == 'f-rcnn':
+        return f_rcnn_fixp(pred_data['boxes'][l_i], label)
+    elif model_name == 'yolov3spp':
+        return yolov3spp_fix(pred_data['labels'][l_i], int(pred_data['feature_index'][l_i]))
+    else:
+        return model
