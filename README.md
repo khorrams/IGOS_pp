@@ -1,7 +1,7 @@
 # Integrated-Gradient Optimized Saliency Maps (iGOS++/I-GOS)
 PyTorch implementation for a family of salieny (attribution) map methods that optimize for an explanation mask using integrated gradient. 
 
->* Mingqi Jiang, Saeed Khorram, Li Fuxin. ["Diverse Explanations for Object Detectors with Nesterov-Accelerated iGOS++"], BMVC 2023.
+>* Mingqi Jiang, Saeed Khorram, Li Fuxin. "Diverse Explanations for Object Detectors with Nesterov-Accelerated iGOS++", BMVC 2023.
 
 >* Saeed Khorram, Tyler Lawson, Li Fuxin. ["iGOS++: Integrated Gradient Optimized Saliency by Bilateral Perturbations"](https://arxiv.org/pdf/2012.15783.pdf), ACM-CHIL 2021.
 
@@ -29,21 +29,29 @@ You can update the pip and install the dependencies using:
 ### Quick Start
 To generate explanations, you can simply run:
 ```
-(env) $ python main.py --method <I-GOS/iGOS++> --data <path to images> 
+(env) $ python main.py --method <I-GOS/iGOS++> --opt <LS/NAG> --data <path to images> 
 ```
-where `I-GOS` and `iGOS++` are the explanations methods and the `--data` defines the path to the images.
+where `I-GOS` and `iGOS++` are the explanations methods, `LS` and `NAG` are the optimization methods, and the `--data` defines the path to the images.
 
-The hyperparameters of our method can be directly passed as arguments when running the code, e.g.:
+The hyperparameters of our method can be directly passed as arguments when running the code:
+
+Classification
 ```
-(env) $ python main.py --method iGOS++ --data samples/ --size 224 --model vgg19 
---batch_size 10 --L1 10 --L2 20 --ig_iter 20 --iterations 20 --alpha 1000 
+(env) $ python main.py --method iGOS++ --opt NAG --data samples/ --dataset imagenet --input_size 224
+--size 224 --model vgg19 --L1 10 --L2 20 --ig_iter 20 --iterations 20 --alpha 1000 
+```
+
+Object Detection and Instance Segmentation
+```
+(env) $ python main.py --method iGOS++ --opt NAG --data samples/ --dataset coco --input_size 800
+--size 100 --model m-rcnn --L1 0.1 --L2 20 --ig_iter 5 --iterations 5 --alpha 10 
 ```
  
 ### Citation
 If you use this code for your research, please consider citing our papers:
 
 ```
-@inproceedings{qi2020visualizing,
+@inproceedings{jiang2023nagigos++,
   title={Diverse Explanations for Object Detectors with Nesterov-Accelerated iGOS++},
   author={Jiang, Mingqi and Khorram, Saeed and Fuxin, Li},
   booktitle={Proceedings of the British Machine Vision Conference (BMVC)},
