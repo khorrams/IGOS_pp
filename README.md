@@ -46,6 +46,14 @@ Object Detection and Instance Segmentation
 (env) $ python main.py --method iGOS++ --opt NAG --data samples/ --dataset coco --input_size 800
 --size 100 --model m-rcnn --L1 0.1 --L2 20 --ig_iter 5 --iterations 5 --alpha 10 
 ```
+
+### Diverse Initialization
+To generate explanations with different initializations, you can run:
+```
+(env) $ python main.py --method iGOS++ --opt NAG --data samples/ --dataset coco --input_size 800
+--size 100 --model m-rcnn --L1 0.1 --L2 20 --ig_iter 5 --iterations 5 --alpha 10 --diverse_k 2
+--init_val 0.2 --init_posi 2
+```
  
 ### Citation
 If you use this code for your research, please consider citing our papers:
