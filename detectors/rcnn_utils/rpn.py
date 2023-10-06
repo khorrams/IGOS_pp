@@ -325,26 +325,6 @@ class rpn_fix_prop(torch.nn.Module):
         # proposals = proposals.view(num_images, -1, 4)
         # boxes, scores = self.filter_proposals(proposals, objectness, images.image_sizes, num_anchors_per_level)
 
-        # print('boxes_predict')
-        # print(boxes)
-        # print('scores')
-        # print(scores)
-        # print(scores[0].size())
-        # boxes = [torch.tensor([[ 78.07531*(800/224) ,  12.731032*(800/224), 165.64648 *(800/224), 153.72528*(800/224) ]]).cuda()]
-        # boxes = [torch.tensor([[ 0.0000, 0.0000, 400.0000, 400.0000]]).cuda()]
-        # boxes = [torch.tensor([[ 43.2234, 119.0216, 195.2963, 224.0000],
-        #   [ 79.1412,  12.1129, 162.7197, 149.9692],
-        #   [ 62.6147, 134.3391, 140.8971, 224.0000],
-        #   [ 43.5693,  72.0893, 174.1935, 218.4855],
-        #   [ 61.8014, 134.6657, 141.5351, 224.0000],
-        #   [120.0851, 121.9939, 199.4483, 219.8013]]).cuda()]
-        # a=[]
-        # for i in range(1000):
-        #     a.append([ 78.07531*(800/224) ,  12.731032*(800/224), 165.64648 *(800/224), 153.72528*(800/224) ])
-        # boxes=[torch.tensor(a).cuda()]
-        # print('boxes')
-        # print(boxes)
-        # boxes=[torch.tensor([self.box_help]).cuda()]
         boxes = [self.box_help for _i in range(len(images.image_sizes))]
         
         losses = {}
