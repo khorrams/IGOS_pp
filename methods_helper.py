@@ -71,6 +71,7 @@ def interval_score(model, model_name, image, baseline, label, up_masks, num_iter
         path from baseline to masked image, with num_iter intervals.
 
     :param model:
+    :param model_name:
     :param image:
     :param baseline:
     :param label:
@@ -110,6 +111,7 @@ def integrated_gradient(model, model_name, image, baseline, label, up_masks, num
         Does not have the original mask, so does not return the gradient
 
     :param model:
+    :param model_name:
     :param image:
     :param baseline:
     :param label:
@@ -229,8 +231,10 @@ def metric(image, baseline, mask, model, model_name, label, label_i, pred_data, 
     :param baseline:
     :param mask:
     :param model:
+    :param model_name:
     :param label:
-    :param step:
+    :param label_i:
+    :param pred_data:
     :param size:
     :return:
     """

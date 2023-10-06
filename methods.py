@@ -31,6 +31,8 @@ def IGOS(
         Link to the paper: https://aaai.org/ojs/index.php/AAAI/article/view/6863/6717
 
     :param model:
+    :param model_name:
+    :param init_mask:
     :param image:
     :param baseline:
     :param label:
@@ -40,6 +42,7 @@ def IGOS(
     :param ig_iter:
     :param iterations:
     :param alpha:
+    :param opt:
     :param softmax:
     :param kwargs:
     :return:
@@ -132,6 +135,8 @@ def iGOS_pp(
         Link to the paper: https://arxiv.org/pdf/2012.15783.pdf
 
     :param model:
+    :param model_name:
+    :param init_mask:
     :param image:
     :param baseline:
     :param label:
@@ -141,6 +146,7 @@ def iGOS_pp(
     :param L1:
     :param L2:
     :param alpha:
+    :param opt:
     :param softmax:
     :param kwargs:
     :return:
@@ -283,6 +289,8 @@ def iGOS_p(
         Similar idea to iGOS++, but generates explanation only using one mask (optimized for both insertion and deletion).
 
     :param model:
+    :param model_name:
+    :param init_mask:
     :param image:
     :param baseline:
     :param label:
@@ -292,6 +300,7 @@ def iGOS_p(
     :param L1:
     :param L2:
     :param alpha:
+    :param opt:
     :param softmax:
     :param kwargs:
     :return:

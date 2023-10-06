@@ -11,9 +11,9 @@ from args import init_args
 from utils import *
 from methods_helper import *
 from methods import IGOS, iGOS_p, iGOS_pp
-from detectors.m_rcnn import m_rcnn, m_rcnn_fixp
-from detectors.f_rcnn import f_rcnn, f_rcnn_fixp
-from detectors.yolo import yolov3spp, yolov3spp_fix
+from detectors.m_rcnn import m_rcnn
+from detectors.f_rcnn import f_rcnn
+from detectors.yolo import yolov3spp
 
 def gen_explanations(model, dataloader, args):
 
