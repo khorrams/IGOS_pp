@@ -28,7 +28,7 @@ You can update the pip and install the dependencies using:
 
 ### Detector Preparation
 
-Download the Mask R-CNN, Faster R-CNN and YOLOv3-SPP, then put them in the `weight/`:
+Download the [Mask R-CNN](https://drive.google.com/file/d/1X2xlYHwvWbaVqH4wjOlHzqUsmy-sQH3f/view?usp=drive_link), [Faster R-CNN](https://drive.google.com/file/d/1C6Kn3K8srJ3qwwju8HA2_AMB3yEoKzhb/view?usp=drive_link) and [YOLOv3-SPP](https://drive.google.com/file/d/1YBANlIZ9jXdNiebqo01MtSdoxGzPKEm0/view?usp=drive_link), then put them in the `weight/`:
 ```
 weight/
   maskrcnn_resnet50_fpn_coco-bf2d0c1e.pth

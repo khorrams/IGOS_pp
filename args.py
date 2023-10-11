@@ -72,7 +72,7 @@ def init_args():
         type=str,
         choices=['LS', 'NAG'],
         default='NAG',
-        help='The optimization.'
+        help='The optimization algorithm.'
     )
 
     parser.add_argument(
