@@ -415,7 +415,7 @@ def get_initial(pred_data, k, init_posi, init_val, input_size, out_size):
         pred_data['init_masks'].append(1 - init_mask)
     return pred_data
 
-def model_fix(model, model_name, pred_data, l_i, label):
+def model_fix(model, model_name, model_file, pred_data, l_i, label):
     """
         fix the proposal or use the same box for detectors
 
@@ -427,10 +427,10 @@ def model_fix(model, model_name, pred_data, l_i, label):
     :return:
     """
     if model_name == 'm-rcnn':
-        return m_rcnn_fixp(pred_data['boxes'][l_i], label)
+        return m_rcnn_fixp(pred_data['boxes'][l_i], label, url=model_file)
     elif model_name == 'f-rcnn':
-        return f_rcnn_fixp(pred_data['boxes'][l_i], label)
+        return f_rcnn_fixp(pred_data['boxes'][l_i], label, url=model_file)
     elif model_name == 'yolov3spp':
-        return yolov3spp_fix(pred_data['labels'][l_i], int(pred_data['feature_index'][l_i]))
+        return yolov3spp_fix(pred_data['labels'][l_i], int(pred_data['feature_index'][l_i]), url=model_file)
     else:
         return model

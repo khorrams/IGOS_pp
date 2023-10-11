@@ -14,6 +14,13 @@ def init_args():
         choices=['vgg19', 'resnet50', 'm-rcnn', 'f-rcnn', 'yolov3spp'],
         default='resnet50',
         help='The model to use for making predictions.')
+    
+    parser.add_argument(
+        '--model_file',
+        metavar='MF',
+        default='./weight/maskrcnn_resnet50_fpn_coco-bf2d0c1e.pth',
+        type=str,
+        help='the path to the model weight file to be used.')
 
     parser.add_argument(
         '--data',

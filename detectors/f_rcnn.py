@@ -9,13 +9,14 @@ from .rcnn_utils.roihead import TwoMLPHead, FastRCNNPredictor, RoIHeads_score, M
 from .rcnn_utils.transform import GeneralizedRCNNTransform
 import numpy as np
 
-def f_rcnn():
+def f_rcnn(url = "./weight/fasterrcnn_resnet50_fpn_coco-258fb6c6.pth"):
     model = models.detection.fasterrcnn_resnet50_fpn()
     # cancel the normalization
     model.transform = GeneralizedRCNNTransform(800,1333,[0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+    model.load_state_dict(torch.load(url))
     return model
 
-def f_rcnn_fixp(proposal, label):
+def f_rcnn_fixp(proposal, label, url = "./weight/fasterrcnn_resnet50_fpn_coco-258fb6c6.pth"):
     fixed_prop = torch.Tensor([proposal]).cuda()
     fixed_label = torch.LongTensor([label]) - 1
 
@@ -84,7 +85,6 @@ def f_rcnn_fixp(proposal, label):
 
     model.transform=GeneralizedRCNNTransform(800,1333,[0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     
-    url="./weight/fasterrcnn_resnet50_fpn_coco-258fb6c6.pth"
     model.load_state_dict(torch.load(url))
     model = model.cuda()
     model.eval()

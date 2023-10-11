@@ -6,13 +6,14 @@ import torch.nn as nn
 
 class YOLOv3_fix(nn.Module):
     def __init__(self,
-                 labels=None, 
-                 feature_index=None, 
+                 labels = None, 
+                 feature_index = None, 
+                 url = "./weight/yolov3-spp-ultralytics-512.pt"
                  ):
         super(YOLOv3_fix, self).__init__()
         self.img_size = 512  
         self.cfg = "./detectors/yolo_utils/yolov3-spp.cfg"  
-        self.weights = "./weight/yolov3-spp-ultralytics-512.pt" 
+        self.weights = url
 
         self.model = Darknet(self.cfg, self.img_size)
         self.weights_dict = torch.load(self.weights, map_location='cpu')

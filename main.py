@@ -56,7 +56,7 @@ def gen_explanations(model, dataloader, args):
         for l_i, label in enumerate(pred_data['labels']):
 
             # fix the proposal or use the same box for detectors
-            fix_model = model_fix(model, args.model, pred_data, l_i, label)
+            fix_model = model_fix(model, args.model, args.model_file, pred_data, l_i, label)
 
             now = time.time()
 
@@ -146,19 +146,15 @@ if __name__ == "__main__":
         model = models.resnet50(pretrained=True, progress=True).cuda()
 
     elif args.model == 'm-rcnn':
-        model = m_rcnn()
-        url="./weight/maskrcnn_resnet50_fpn_coco-bf2d0c1e.pth"
-        model.load_state_dict(torch.load(url))
-        model=model.cuda()
+        model = m_rcnn(url = args.model_file)
+        model = model.cuda()
 
     elif args.model == 'f-rcnn':
-        model = f_rcnn()
-        url="./weight/fasterrcnn_resnet50_fpn_coco-258fb6c6.pth"
-        model.load_state_dict(torch.load(url))
-        model=model.cuda()
+        model = f_rcnn(url = args.model_file)
+        model = model.cuda()
     
     elif args.model == 'yolov3spp':
-        model = yolov3spp()
+        model = yolov3spp(url = args.model_file)
         model = model.to('cuda')
 
     else:
