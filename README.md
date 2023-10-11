@@ -41,7 +41,7 @@ To generate explanations, you can simply run:
 ```
 (env) $ python main.py --method <I-GOS/iGOS++> --opt <LS/NAG> --data <path to images> 
 ```
-where `I-GOS` and `iGOS++` are the explanations methods, `LS` and `NAG` are the optimization methods, and the `--data` defines the path to the images.
+where `I-GOS` and `iGOS++` are the explanations methods, `LS (Line Search)` and `NAG (Nesterov Accelerated Gradient)` are the optimization methods, and the `--data` defines the path to the images.
 
 The hyperparameters of our method can be directly passed as arguments when running the code:
 
@@ -54,15 +54,16 @@ Classification
 Object Detection and Instance Segmentation
 ```
 (env) $ python main.py --method iGOS++ --opt NAG --data samples/ --dataset coco --input_size 800
---size 100 --model m-rcnn --L1 0.1 --L2 20 --ig_iter 5 --iterations 5 --alpha 10 
+--size 100 --model m-rcnn --model_file ./weight/maskrcnn_resnet50_fpn_coco-bf2d0c1e.pth --L1 0.1 
+--L2 20 --ig_iter 5 --iterations 5 --alpha 10 
 ```
 
 ### Diverse Initialization
 To generate explanations with different initializations, you can run:
 ```
 (env) $ python main.py --method iGOS++ --opt NAG --data samples/ --dataset coco --input_size 800
---size 100 --model m-rcnn --L1 0.1 --L2 20 --ig_iter 5 --iterations 5 --alpha 10 --diverse_k 2
---init_val 0.2 --init_posi 2
+--size 100 --model m-rcnn --model_file ./weight/maskrcnn_resnet50_fpn_coco-bf2d0c1e.pth --L1 0.1 
+--L2 20 --ig_iter 5 --iterations 5 --alpha 10 --diverse_k 2 --init_val 0.2 --init_posi 2
 ```
  
 ### Citation
