@@ -81,16 +81,26 @@ def init_args():
         default=2)
 
     parser.add_argument(
-        '--init_val',
-        type=float,
-        default=0.,
-        help='The initialization value.')
-
-    parser.add_argument(
         '--init_posi',
         type=int,
         default=0,
-        help='The initialization position.')
+        help='The initialization position, which cell of the K x K grid will be used to initialize the mask with nonzero values (use init_val to control it)')
+    """
+            If K = 2:      If K = 3:
+            -------        ----------
+            |0 |1 |        |0 |1 |2 |
+            -------        ----------
+            |2 |3 |        |3 |4 |5 |
+            -------        ----------
+                           |6 |7 |8 |
+                           ----------
+    """
+
+    parser.add_argument(
+        '--init_val',
+        type=float,
+        default=0.,
+        help='The initialization value used to initialize the mask in only one cell of the K x K grid.')
 
     parser.add_argument(
         '--L1',
