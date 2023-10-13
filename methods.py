@@ -133,6 +133,7 @@ def iGOS_pp(
         Generates explanation by optimizing a separate masks for insertion and deletion.
         Paper title:  iGOS++: Integrated Gradient Optimized Saliency by Bilateral Perturbations
         Link to the paper: https://arxiv.org/pdf/2012.15783.pdf
+        Paper title:  Diverse Explanations for Object Detectors with Nesterov-Accelerated iGOS++
 
     :param model: The model to use for making predictions
     :param model_name: The model name to use for making predictions
