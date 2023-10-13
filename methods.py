@@ -30,20 +30,20 @@ def IGOS(
         Paper title:  Visualizing Deep Networks by Optimizing with Integrated Gradients, AAAI 2020
         Link to the paper: https://aaai.org/ojs/index.php/AAAI/article/view/6863/6717
 
-    :param model:
-    :param model_name:
-    :param init_mask:
-    :param image:
-    :param baseline:
-    :param label:
-    :param L1:
-    :param L2:
-    :param size:
-    :param ig_iter:
-    :param iterations:
-    :param alpha:
-    :param opt:
-    :param softmax:
+    :param model: The model to use for making predictions
+    :param model_name: The model name to use for making predictions
+    :param init_mask: The area in one cell of the K x K grid to use for initializing the mask
+    :param image: The image to be explained
+    :param baseline: The blured image as the baseline to use for making predictions
+    :param label: The predicted class index of this image
+    :param L1: The hyperparameter for TV/BTV norm
+    :param L2: The hyperparameter for TV/BTV norm
+    :param size: The size of the predicted mask 
+    :param ig_iter: The step size of the integtated gradient accumulation
+    :param iterations: The number of iterations required to predict the mask
+    :param alpha: The step size for updating the mask
+    :param opt: The optimization algorithm
+    :param softmax: The output function for the model
     :param kwargs:
     :return:
     """
@@ -134,20 +134,20 @@ def iGOS_pp(
         Paper title:  iGOS++: Integrated Gradient Optimized Saliency by Bilateral Perturbations
         Link to the paper: https://arxiv.org/pdf/2012.15783.pdf
 
-    :param model:
-    :param model_name:
-    :param init_mask:
-    :param image:
-    :param baseline:
-    :param label:
-    :param size:
-    :param iterations:
-    :param ig_iter:
-    :param L1:
-    :param L2:
-    :param alpha:
-    :param opt:
-    :param softmax:
+    :param model: The model to use for making predictions
+    :param model_name: The model name to use for making predictions
+    :param init_mask: The area in one cell of the K x K grid to use for initializing the mask
+    :param image: The image to be explained
+    :param baseline: The blured image as the baseline to use for making predictions
+    :param label: The predicted class index of this image
+    :param size: The size of the predicted mask 
+    :param iterations: The number of iterations required to predict the mask
+    :param ig_iter: The step size of the integtated gradient accumulation
+    :param L1: The hyperparameter for TV/BTV norm
+    :param L2: The hyperparameter for TV/BTV norm
+    :param alpha: The step size for updating the mask
+    :param opt: The optimization algorithm
+    :param softmax: The output function for the model
     :param kwargs:
     :return:
     """
@@ -288,20 +288,20 @@ def iGOS_p(
     """
         Similar idea to iGOS++, but generates explanation only using one mask (optimized for both insertion and deletion).
 
-    :param model:
-    :param model_name:
-    :param init_mask:
-    :param image:
-    :param baseline:
-    :param label:
-    :param size:
-    :param iterations:
-    :param ig_iter:
-    :param L1:
-    :param L2:
-    :param alpha:
-    :param opt:
-    :param softmax:
+    :param model: The model to use for making predictions
+    :param model_name: The model name to use for making predictions
+    :param init_mask: The area in one cell of the K x K grid to use for initializing the mask
+    :param image: The image to be explained
+    :param baseline: The blured image as the baseline to use for making predictions
+    :param label: The predicted class index of this image
+    :param size: The size of the predicted mask 
+    :param iterations: The number of iterations required to predict the mask
+    :param ig_iter: The step size of the integtated gradient accumulation
+    :param L1: The hyperparameter for TV/BTV norm
+    :param L2: The hyperparameter for TV/BTV norm
+    :param alpha: The step size for updating the mask
+    :param opt: The optimization algorithm
+    :param softmax: The output function for the model
     :param kwargs:
     :return:
     """
