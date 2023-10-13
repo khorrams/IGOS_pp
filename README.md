@@ -108,4 +108,4 @@ series = {CHIL '21}
 ```
 
 ### Acknowledgement
-Some parts of the code are borrowed from [pytorch](https://github.com/pytorch/pytorch) and [ultralytics(yolov3)](https://github.com/ultralytics/yolov3). We thank the authors for their excellent work.
+Some parts of the code are borrowed from [TorchVision](https://github.com/pytorch/vision/tree/main) and [yolov3_spp_gradcam](https://github.com/yipintiancheng/yolov3_spp_gradcam). We thank the authors for their excellent work.

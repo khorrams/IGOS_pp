@@ -1,3 +1,9 @@
+# --------------------------------------------------------
+# Copied from TorchVision repo
+# https://github.com/pytorch/vision/tree/main
+# We thank the authors for their excellent work.
+# --------------------------------------------------------
+
 import collections
 import math
 import pathlib

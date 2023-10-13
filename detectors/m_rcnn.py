@@ -1,3 +1,9 @@
+# --------------------------------------------------------
+# Copied from TorchVision repo
+# https://github.com/pytorch/vision/tree/main
+# We thank the authors for their excellent work.
+# --------------------------------------------------------
+
 from torchvision.ops import MultiScaleRoIAlign
 from torchvision.models.detection.anchor_utils import AnchorGenerator
 import torchvision.models as models

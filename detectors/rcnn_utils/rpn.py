@@ -1,3 +1,9 @@
+# --------------------------------------------------------
+# Copied from TorchVision repo
+# https://github.com/pytorch/vision/tree/main
+# We thank the authors for their excellent work.
+# --------------------------------------------------------
+
 from typing import Dict, List, Optional, Tuple
 from torch import nn, Tensor
 from torch.nn import functional as F

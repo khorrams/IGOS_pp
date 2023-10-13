@@ -1,3 +1,9 @@
+# --------------------------------------------------------
+# Copied from yolov3_spp_gradcam repo
+# https://github.com/yipintiancheng/yolov3_spp_gradcam/tree/master
+# We thank the authors for their excellent work.
+# --------------------------------------------------------
+
 import torch
 from .yolo_utils.models import Darknet
 from .yolo_utils.yolo_fix import YOLOv3_fix
