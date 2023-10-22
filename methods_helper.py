@@ -100,7 +100,7 @@ def interval_score(model, model_name, image, baseline, label, up_masks, num_iter
 
     else:
         losses = output_func(local_images.view(*new_shape), model).view(image.shape[0], num_iter, -1)
-        losses = torch.gather(losses, 2, label.view(-1, 1).expand(-1, num_iter).view(-1, num_iter, 1))
+        losses = torch.gather(losses, 2, label.cuda().view(-1, 1).expand(-1, num_iter).view(-1, num_iter, 1))
 
     return losses / num_iter
 

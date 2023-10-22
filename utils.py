@@ -297,7 +297,7 @@ def save_images(images, index, index_o, outdir, classes, labels):
     """
     images_ = images.cpu().detach().permute((0, 2, 3, 1)) * std + mean
     for i, image in enumerate(images_):
-        plt.imsave(os.path.join(outdir, f'{index+i}_{index_o}_image_{classes[labels]}.jpg'), image.numpy())
+        plt.imsave(os.path.join(outdir, f'{index+i}_{index_o}_image_{classes[int(labels.cpu())]}.jpg'), image.numpy())
 
 
 def load_image(path):
@@ -371,7 +371,7 @@ def get_predict(image, model, args, threshold=0.5):
 
     else:
         _, labels = torch.max(model(image), 1)
-        pred_data['labels'] = labels.detach()
+        pred_data['labels'] = labels.detach().cpu()
         pred_data['boxes'] = np.array([[0, 0, image.shape[-2], image.shape[-1]]])
         pred_data['no_res'] = False
 
